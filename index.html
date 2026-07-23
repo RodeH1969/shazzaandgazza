@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shazza and Gazza</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  :root{
+    --bg: #101219;
+    --bg-2: #171a23;
+    --surface: #1c2029;
+    --surface-2: #242938;
+    --line: rgba(237,238,241,0.09);
+    --line-strong: rgba(237,238,241,0.16);
+    --text: #edeef1;
+    --muted: #8b90a3;
+    --muted-2: #5e6376;
+    --gold: #f2a93b;
+    --gold-dim: #a87527;
+    --shazza: #ff5f96;
+    --shazza-dim: #8a2f52;
+    --gazza: #35c9ea;
+    --gazza-dim: #1c6d80;
+    --radius: 14px;
+    --shadow: 0 20px 40px -20px rgba(0,0,0,0.6);
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: radial-gradient(ellipse 1200px 600px at 50% -10%, #1a2030 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: 'Inter', system-ui, sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{ margin:0; }
+  button{ font-family:inherit; }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+  .display{ font-family:'Bebas Neue', sans-serif; letter-spacing:0.02em; }
+
+  a:focus-visible, button:focus-visible, input:focus-visible, [tabindex]:focus-visible{
+    outline: 2px solid var(--gold);
+    outline-offset: 3px;
+  }
+
+  /* ---------- Header ---------- */
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    padding: 18px 28px;
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top:0;
+    z-index: 40;
+    background: rgba(16,18,25,0.85);
+    backdrop-filter: blur(10px);
+  }
+  .logo-slot{
+    height:48px;
+    width:auto;
+    object-fit:contain;
+    flex-shrink:0;
+  }
+  .brand-mark{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    line-height:1;
+    flex:1;
+    min-width:0;
+  }
+  .brand-mark .title{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    white-space:nowrap;
+  }
+  .title-text{
+    font-family:'Bebas Neue', sans-serif;
+    font-size: clamp(22px, 4vw, 34px);
+    letter-spacing:0.03em;
+    background: linear-gradient(90deg, var(--gold), #ffd98a 45%, var(--gold));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  .title-mask{
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 50%;
+    border: 2px solid var(--line-strong);
+    flex-shrink:0;
+    display:block;
+  }
+  .brand-mark .sub{
+    font-family:'JetBrains Mono', monospace;
+    font-size:10px;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color: var(--muted);
+    margin-top:2px;
+  }
+  .prizes-btn{
+    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background: var(--surface-2);
+    border:1px solid var(--line-strong);
+    color: var(--gold);
+    padding:10px 16px;
+    border-radius:999px;
+    font-weight:700;
+    font-size:13px;
+    letter-spacing:0.03em;
+    cursor:pointer;
+    transition: background .15s ease, transform .15s ease, border-color .15s ease;
+  }
+  .prizes-btn:hover{ background:#2c3245; border-color: var(--gold-dim); transform: translateY(-1px); }
+  .prizes-btn svg{ width:16px; height:16px; }
+
+  /* ---------- Hero strip ---------- */
+  .hero{
+    max-width:1180px;
+    margin: 0 auto;
+    padding: 40px 28px 8px;
+    text-align:center;
+  }
+  .hero .kicker{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.24em;
+    text-transform:uppercase;
+    color: var(--gazza);
+  }
+  .hero h1{
+    font-family:'Bebas Neue', sans-serif;
+    font-size: clamp(38px, 7vw, 68px);
+    letter-spacing:0.01em;
+    margin-top:8px;
+    line-height:0.95;
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:center;
+    gap: 0.2em;
+    row-gap: 10px;
+  }
+  .hero h1 .accent{ color: var(--shazza); }
+  .headline-mask{
+    width: 56px;
+    height: 56px;
+    min-width: 56px;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 50%;
+    border: 2px solid var(--line-strong);
+    display:block;
+  }
+  .hero p{
+    color: var(--muted);
+    max-width:520px;
+    margin: 14px auto 0;
+    font-size:15px;
+    line-height:1.55;
+  }
+  .hero .stats{
+    display:flex;
+    justify-content:center;
+    gap:28px;
+    margin-top:26px;
+    flex-wrap:wrap;
+  }
+  .hero .stat{ text-align:center; }
+  .hero .stat b{
+    display:block;
+    font-family:'Bebas Neue', sans-serif;
+    font-size:26px;
+    color: var(--text);
+  }
+  .hero .stat span{
+    font-family:'JetBrains Mono', monospace;
+    font-size:10px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color: var(--muted-2);
+  }
+
+  /* ---------- Grid ---------- */
+  .grid-wrap{ max-width:1180px; margin:0 auto; padding: 36px 28px 100px; }
+  .grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 26px;
+  }
+
+  /* ---------- Ticket card ---------- */
+  .ticket{
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    overflow:hidden;
+    box-shadow: var(--shadow);
+    cursor:pointer;
+    transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    position:relative;
+  }
+  .ticket:hover, .ticket:focus-visible{
+    transform: translateY(-5px);
+    border-color: var(--line-strong);
+  }
+  .ticket .photo{
+    position:relative;
+    aspect-ratio: 4/3;
+    overflow:hidden;
+    background: var(--bg-2);
+  }
+  .ticket .photo img{
+    width:100%; height:100%; object-fit:cover;
+    display:block;
+    transition: transform .4s ease;
+  }
+  .ticket:hover .photo img{ transform: scale(1.04); }
+
+  .mask-badge{
+    position:absolute;
+    left:12px; bottom:12px;
+    width:34px; height:34px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    border:2px solid rgba(16,18,25,0.7);
+  }
+  .mask-badge.type-shazza{ background: var(--shazza); }
+  .mask-badge.type-gazza{ background: var(--gazza); }
+  .mask-badge img{ width:100%; height:100%; object-fit:cover; border-radius:50%; display:block; }
+
+  .stamp{
+    position:absolute;
+    top:22px; right:-46px;
+    width:190px;
+    transform: rotate(38deg);
+    transform-origin: center;
+    font-family:'Bebas Neue', sans-serif;
+    font-size:20px;
+    letter-spacing:0.1em;
+    text-align:center;
+    padding:8px 0;
+    text-transform:uppercase;
+    pointer-events:none;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.5);
+    border-top: 2px solid rgba(0,0,0,0.25);
+    border-bottom: 2px solid rgba(0,0,0,0.25);
+  }
+  .stamp.type-shazza{ background: var(--shazza); color: #2b0a18; }
+  .stamp.type-gazza{ background: var(--gazza); color: #08222a; }
+
+  /* perforated divider between photo and stub */
+  .perf{
+    position:relative;
+    height:0;
+    border-top: 2px dashed var(--line-strong);
+  }
+  .perf::before, .perf::after{
+    content:"";
+    position:absolute; top:50%; width:18px; height:18px;
+    background: var(--bg);
+    border-radius:50%;
+    transform: translateY(-50%);
+  }
+  .perf::before{ left:-9px; }
+  .perf::after{ right:-9px; }
+
+  .stub{
+    padding: 12px 16px 14px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .stub .ticket-no{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    color: var(--muted);
+    letter-spacing:0.05em;
+  }
+  .stub .ticket-no b{ color:var(--text); }
+  .stub .status{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.05em;
+    padding: 4px 9px;
+    border-radius:5px;
+  }
+  .stub .status.open{ color: var(--muted); border:1px solid var(--line-strong); }
+  .stub .status.won.type-shazza{ color: var(--shazza); border:1px solid var(--shazza-dim); background: rgba(255,95,150,0.08); }
+  .stub .status.won.type-gazza{ color: var(--gazza); border:1px solid var(--gazza-dim); background: rgba(53,201,234,0.08); }
+
+  /* ---------- Modal shell ---------- */
+  .overlay{
+    position:fixed; inset:0;
+    background: rgba(8,9,13,0.82);
+    backdrop-filter: blur(6px);
+    display:flex; align-items:center; justify-content:center;
+    z-index:100;
+    padding: 20px;
+    opacity:0;
+    pointer-events:none;
+    transition: opacity .18s ease;
+  }
+  .overlay.open{ opacity:1; pointer-events:auto; }
+  .overlay .panel{
+    transform: translateY(10px) scale(.98);
+    transition: transform .18s ease;
+  }
+  .overlay.open .panel{ transform: translateY(0) scale(1); }
+
+  .icon-btn{
+    background: var(--surface-2);
+    border:1px solid var(--line-strong);
+    color: var(--text);
+    width:38px; height:38px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+  }
+  .icon-btn:hover{ background:#2c3245; }
+  .icon-btn svg{ width:18px; height:18px; }
+
+  /* ---------- Lightbox ---------- */
+  #lightbox .panel{
+    width:100%;
+    max-width: 900px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  .lb-topbar{
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .lb-topbar .meta{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    color: var(--muted);
+  }
+  .lb-stage{
+    position:relative;
+    background: var(--bg-2);
+    border-radius: var(--radius);
+    border:1px solid var(--line);
+    overflow:hidden;
+    height: min(62vh, 560px);
+    touch-action:none;
+    cursor: grab;
+  }
+  .lb-stage.zoomed{ cursor: grab; }
+  .lb-stage img{
+    position:absolute; top:0; left:0;
+    width:100%; height:100%;
+    object-fit:contain;
+    user-select:none;
+    -webkit-user-drag:none;
+    transform-origin: center center;
+  }
+  .lb-hint{
+    position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
+    font-family:'JetBrains Mono', monospace;
+    font-size:10.5px;
+    color: var(--muted);
+    background: rgba(16,18,25,0.75);
+    padding:5px 10px;
+    border-radius:999px;
+    letter-spacing:0.04em;
+    pointer-events:none;
+  }
+  .lb-badge-row{ display:flex; align-items:center; gap:10px; }
+  .lb-actions{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .btn{
+    border-radius: 10px;
+    padding: 13px 20px;
+    font-weight:700;
+    font-size:14px;
+    letter-spacing:0.01em;
+    cursor:pointer;
+    border:1px solid transparent;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    transition: transform .15s ease, filter .15s ease;
+  }
+  .btn:hover{ transform: translateY(-1px); }
+  .btn:active{ transform: translateY(0); }
+  .btn svg{ width:17px; height:17px; }
+  .btn-primary{
+    background: linear-gradient(180deg, #ffcf7d, var(--gold));
+    color: #1b1204;
+    flex:1;
+    justify-content:center;
+  }
+  .btn-primary:hover{ filter: brightness(1.06); }
+  .btn-secondary{
+    background: var(--surface-2);
+    border-color: var(--line-strong);
+    color: var(--text);
+  }
+  .btn-secondary:hover{ background:#2c3245; }
+
+  /* ---------- Claim modal ---------- */
+  #claimModal .panel{
+    width:100%; max-width:420px;
+    background: var(--surface);
+    border:1px solid var(--line-strong);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 26px 26px 24px;
+  }
+  .modal-head{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px; }
+  .modal-head h2{
+    font-family:'Bebas Neue', sans-serif;
+    font-size:26px;
+    letter-spacing:0.02em;
+  }
+  .modal-sub{ color: var(--muted); font-size:13px; margin-top:6px; line-height:1.5; }
+
+  .field{ margin-top:20px; }
+  .field label{
+    display:block;
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color: var(--muted);
+    margin-bottom:8px;
+  }
+  .camera-box{
+    position:relative;
+    border-radius:10px;
+    overflow:hidden;
+    background:#000;
+    aspect-ratio: 4/3;
+    border:1.5px solid var(--line-strong);
+  }
+  .camera-box video, .camera-box img{
+    width:100%; height:100%;
+    object-fit:cover;
+    display:block;
+    transform: scaleX(-1); /* mirror so it feels like a mirror, not a spy cam */
+  }
+  .camera-error{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    text-align:center;
+    padding:20px;
+    color: var(--muted);
+    font-size:13px;
+    background: var(--surface-2);
+  }
+  .camera-actions{
+    display:flex; gap:10px;
+    margin-top:12px;
+  }
+  .camera-actions .btn{ flex:1; justify-content:center; }
+
+  input[type=tel]{
+    width:100%;
+    background: var(--bg-2);
+    border:1px solid var(--line-strong);
+    color: var(--text);
+    border-radius:10px;
+    padding:13px 14px;
+    font-size:14px;
+    font-family:'JetBrains Mono', monospace;
+  }
+  input[type=tel]::placeholder{ color: var(--muted-2); }
+  input[type=tel]:focus{ outline:none; border-color: var(--gold-dim); }
+
+  .modal-actions{ margin-top:24px; display:flex; gap:10px; }
+  .fine-print{
+    margin-top:16px;
+    font-size:11.5px;
+    color: var(--muted-2);
+    line-height:1.5;
+  }
+
+  /* ---------- Toast ---------- */
+  .toast{
+    position:fixed;
+    bottom:24px; left:50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--surface-2);
+    border:1px solid var(--gazza);
+    color: var(--text);
+    padding:14px 20px;
+    border-radius:10px;
+    font-size:13px;
+    display:flex; align-items:center; gap:10px;
+    box-shadow: var(--shadow);
+    opacity:0;
+    pointer-events:none;
+    transition: opacity .2s ease, transform .2s ease;
+    z-index:200;
+  }
+  .toast.show{ opacity:1; transform: translateX(-50%) translateY(0); }
+  .toast svg{ width:18px; height:18px; color: var(--gazza); flex-shrink:0; }
+
+  /* ---------- Prizes modal ---------- */
+  #prizesModal .panel{
+    width:100%; max-width:440px;
+    background: var(--surface);
+    border:1px solid var(--line-strong);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow:hidden;
+  }
+  .prize-hero{
+    padding: 24px 0 14px;
+    background: linear-gradient(160deg, #241c10, var(--surface));
+    display:flex; align-items:center; justify-content:center;
+    position:relative;
+    border-bottom:1px solid var(--line);
+  }
+  .prize-hero img{
+    height:72px;
+    width:auto;
+    border-radius:12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+  }
+  .prize-body{ padding: 22px 24px 24px; }
+  .prize-body h2{
+    font-family:'Bebas Neue', sans-serif;
+    font-size:26px;
+  }
+  .prize-body p{ color: var(--muted); font-size:13.5px; line-height:1.6; margin-top:10px; }
+
+  footer{
+    text-align:center;
+    padding: 30px 20px 40px;
+    color: var(--muted-2);
+    font-size:12px;
+    font-family:'JetBrains Mono', monospace;
+    letter-spacing:0.04em;
+  }
+
+  @media (max-width: 560px){
+    header{ padding:14px 16px; }
+    .logo-slot{ height:34px; }
+    .prizes-btn{ padding:9px 12px; font-size:0; }
+    .prizes-btn svg{ width:18px; height:18px; }
+    .prizes-btn::after{ content:"Prizes"; font-size:12px; margin-left:0; }
+    .hero{ padding:28px 18px 4px; }
+    .grid-wrap{ padding:26px 16px 80px; }
+    .lb-stage{ height:46vh; }
+    .lb-actions{ flex-direction:column; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ transition:none !important; animation:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <img class="logo-slot" src="logo.png" alt="Shazza and Gazza logo">
+  <div class="brand-mark">
+    <h1 class="title"><img class="title-mask" src="shazza.png" alt="Shazza" width="34" height="34"><span class="title-text">SHAZZA &amp; GAZZA</span><img class="title-mask" src="gazza.png" alt="Gazza" width="34" height="34"></h1>
+    <div class="sub">Today&rsquo;s Draw &middot; 7 Photos Live</div>
+  </div>
+  <button class="prizes-btn" id="openPrizes">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/><path d="M12 7S8 7 8 4.5 10 1 12 4c2-3 4-.5 4 0S16 7 12 7Z"/></svg>
+    <span>Prizes</span>
+  </button>
+</header>
+
+<section class="hero">
+  <div class="kicker">Gallery changes every 24 hours</div>
+  <h1><span>Is it <span class="accent">you</span> under</span><img class="headline-mask" src="shazza.png" alt="Shazza" width="56" height="56"><span>or</span><img class="headline-mask" src="gazza.png" alt="Gazza" width="56" height="56"><span>?</span></h1>
+  <p>Yes? Claim your prize.</p>
+  <div class="stats">
+    <div class="stat"><b>7</b><span>Photos today</span></div>
+    <div class="stat"><b>2</b><span>Already claimed</span></div>
+    <div class="stat"><b>24h</b><span>Till next drop</span></div>
+  </div>
+</section>
+
+<div class="grid-wrap">
+  <div class="grid" id="grid"></div>
+</div>
+
+<footer>SHAZZA AND GAZZA &middot; A LOCAL BRISBANE THING &middot; PROTOTYPE BUILD</footer>
+
+<!-- Lightbox -->
+<div class="overlay" id="lightbox">
+  <div class="panel">
+    <div class="lb-topbar">
+      <div class="lb-badge-row">
+        <span class="meta mono" id="lbMeta">TICKET NO. 001</span>
+      </div>
+      <button class="icon-btn" id="closeLightbox" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="lb-stage" id="lbStage">
+      <img id="lbImage" src="" alt="Crowd photo, zoom in to spot the masked face">
+      <div class="lb-hint">Scroll or pinch to zoom &middot; drag to pan</div>
+    </div>
+    <div class="lb-actions">
+      <button class="btn btn-primary" id="thatsMeBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+        That&rsquo;s Me &mdash; Claim It
+      </button>
+      <button class="btn btn-secondary" id="shareBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5 15.4 17.5M15.4 6.5 8.6 10.5"/></svg>
+        Tag a Mate
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Claim modal -->
+<div class="overlay" id="claimModal">
+  <div class="panel">
+    <div class="modal-head">
+      <div>
+        <h2>Claim This Ticket</h2>
+        <p class="modal-sub">Snap a quick selfie and pop in your mobile. Our admin checks it against the original photo &mdash; no automated matching, an actual human looks at it.</p>
+      </div>
+      <button class="icon-btn" id="closeClaim" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="field">
+      <label>Your selfie &mdash; camera only</label>
+      <div class="camera-box" id="cameraBox">
+        <video id="cameraVideo" autoplay playsinline muted></video>
+        <canvas id="cameraCanvas" style="display:none;"></canvas>
+        <img id="selfiePreview" style="display:none;" alt="Your captured selfie">
+        <div class="camera-error" id="cameraError" style="display:none;">
+          Camera access needed to claim &mdash; check your browser permissions and reload.
+        </div>
+      </div>
+      <div class="camera-actions">
+        <button type="button" class="btn btn-secondary" id="retakeBtn" style="display:none;">Retake</button>
+        <button type="button" class="btn btn-primary" id="captureBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2Z"/><circle cx="12" cy="13" r="4"/></svg>
+          Take Selfie
+        </button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="mobileInput">Mobile number</label>
+      <input type="tel" id="mobileInput" placeholder="04XX XXX XXX" inputmode="tel">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="cancelClaim">Cancel</button>
+      <button class="btn btn-primary" id="submitClaim" disabled>Submit Claim</button>
+    </div>
+    <p class="fine-print">Live camera only &mdash; no uploading photos of someone else. Your selfie is only used to verify your claim and is never shown publicly. If it checks out, we&rsquo;ll text the number above.</p>
+  </div>
+</div>
+
+<!-- Prizes modal -->
+<div class="overlay" id="prizesModal">
+  <div class="panel">
+    <div class="prize-hero">
+      <img src="aldi.jpeg" alt="Aldi">
+    </div>
+    <div class="prize-body">
+      <h2>$50 if it&rsquo;s you</h2>
+      <p>Claim a photo and it checks out? You walk away with a $50 Aldi gift card. Simple as that.</p>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="closePrizes" style="width:100%">Got It</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>
+  <span id="toastText">Claim sent to admin for review.</span>
+</div>
+
+<script>
+  // ---- Mock data (swap for real API data later) ----
+  const photos = [
+    { id: 1, type: 'shazza', claimed: true,  file: '1.jpg' },
+    { id: 2, type: 'shazza', claimed: false, file: '2.jpg' },
+    { id: 3, type: 'gazza',  claimed: false, file: '3.jpg' },
+    { id: 4, type: 'shazza', claimed: true,  file: '4.jpg' },
+    { id: 5, type: 'gazza',  claimed: false, file: '5.jpg' },
+    { id: 6, type: 'shazza', claimed: false, file: '6.jpg' },
+    { id: 7, type: 'gazza',  claimed: false, file: '7.jpg' },
+  ];
+
+  const icons = {
+    shazza: '<img src="shazza.png" alt="Shazza mask">',
+    gazza:  '<img src="gazza.png" alt="Gazza mask">'
+  };
+
+  const grid = document.getElementById('grid');
+
+  function ticketCard(p){
+    const label = p.type === 'shazza' ? 'Shazza' : 'Gazza';
+    const num = String(p.id).padStart(3, '0');
+    return `
+      <article class="ticket" tabindex="0" data-id="${p.id}" aria-label="Ticket ${num}, ${p.claimed ? label + ' claimed' : label + ' still open'}">
+        <div class="photo">
+          <img src="${p.file}" alt="" loading="lazy">
+          <div class="mask-badge type-${p.type}" title="${label} is hidden in this photo">${icons[p.type]}</div>
+          ${p.claimed ? `<div class="stamp type-${p.type}">${label} Claimed</div>` : ''}
+        </div>
+        <div class="perf"></div>
+        <div class="stub">
+          <span class="ticket-no">No. <b>${num}</b></span>
+          <span class="status ${p.claimed ? 'won type-' + p.type : 'open'}">${p.claimed ? 'CLAIMED' : 'OPEN'}</span>
+        </div>
+      </article>`;
+  }
+
+  grid.innerHTML = photos.map(ticketCard).join('');
+
+  // ---- Lightbox ----
+  const lightbox = document.getElementById('lightbox');
+  const lbImage = document.getElementById('lbImage');
+  const lbMeta = document.getElementById('lbMeta');
+  const lbStage = document.getElementById('lbStage');
+  let currentPhoto = null;
+  let scale = 1, panX = 0, panY = 0;
+
+  function openLightbox(id){
+    currentPhoto = photos.find(p => p.id === id);
+    lbImage.src = currentPhoto.file;
+    lbMeta.textContent = `TICKET NO. ${String(currentPhoto.id).padStart(3,'0')} \u00B7 ${currentPhoto.type.toUpperCase()}`;
+    resetZoom();
+    lightbox.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLightbox(){
+    lightbox.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  function resetZoom(){
+    scale = 1; panX = 0; panY = 0;
+    lbImage.style.transform = `translate(0px,0px) scale(1)`;
+  }
+  function applyTransform(){
+    lbImage.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+  }
+
+  grid.addEventListener('click', e => {
+    const card = e.target.closest('.ticket');
+    if(card) openLightbox(Number(card.dataset.id));
+  });
+  grid.addEventListener('keydown', e => {
+    if((e.key === 'Enter' || e.key === ' ') && e.target.classList.contains('ticket')){
+      e.preventDefault();
+      openLightbox(Number(e.target.dataset.id));
+    }
+  });
+  document.getElementById('closeLightbox').addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', e => { if(e.target === lightbox) closeLightbox(); });
+
+  lbStage.addEventListener('wheel', e => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.15 : 0.15;
+    scale = Math.min(3, Math.max(1, scale + delta));
+    if(scale === 1){ panX = 0; panY = 0; }
+    applyTransform();
+  }, { passive:false });
+
+  let dragging = false, lastX = 0, lastY = 0;
+  lbStage.addEventListener('mousedown', e => {
+    if(scale === 1) return;
+    dragging = true; lastX = e.clientX; lastY = e.clientY;
+    lbStage.style.cursor = 'grabbing';
+  });
+  window.addEventListener('mousemove', e => {
+    if(!dragging) return;
+    panX += e.clientX - lastX; panY += e.clientY - lastY;
+    lastX = e.clientX; lastY = e.clientY;
+    applyTransform();
+  });
+  window.addEventListener('mouseup', () => { dragging = false; lbStage.style.cursor = 'grab'; });
+
+  // basic touch pinch + pan
+  let touchStartDist = null, startScale = 1;
+  lbStage.addEventListener('touchstart', e => {
+    if(e.touches.length === 2){
+      touchStartDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      startScale = scale;
+    } else if(e.touches.length === 1 && scale > 1){
+      dragging = true; lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
+    }
+  }, { passive:true });
+  lbStage.addEventListener('touchmove', e => {
+    if(e.touches.length === 2 && touchStartDist){
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      scale = Math.min(3, Math.max(1, startScale * (dist / touchStartDist)));
+      applyTransform();
+    } else if(e.touches.length === 1 && dragging){
+      panX += e.touches[0].clientX - lastX;
+      panY += e.touches[0].clientY - lastY;
+      lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
+      applyTransform();
+    }
+  }, { passive:true });
+  lbStage.addEventListener('touchend', () => { dragging = false; touchStartDist = null; });
+  lbStage.addEventListener('dblclick', resetZoom);
+
+  document.addEventListener('keydown', e => {
+    if(e.key === 'Escape'){
+      closeLightbox(); closeClaimModal(); closePrizesModal();
+    }
+  });
+
+  // ---- Claim modal: live camera only ----
+  const claimModal = document.getElementById('claimModal');
+  const cameraVideo = document.getElementById('cameraVideo');
+  const cameraCanvas = document.getElementById('cameraCanvas');
+  const selfiePreview = document.getElementById('selfiePreview');
+  const cameraError = document.getElementById('cameraError');
+  const captureBtn = document.getElementById('captureBtn');
+  const retakeBtn = document.getElementById('retakeBtn');
+  const submitClaimBtn = document.getElementById('submitClaim');
+  const mobileInput = document.getElementById('mobileInput');
+
+  let mediaStream = null;
+  let capturedBlob = null;
+
+  async function startCamera(){
+    capturedBlob = null;
+    submitClaimBtn.disabled = true;
+    selfiePreview.style.display = 'none';
+    cameraError.style.display = 'none';
+    captureBtn.style.display = 'inline-flex';
+    retakeBtn.style.display = 'none';
+    try{
+      mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+      cameraVideo.srcObject = mediaStream;
+      cameraVideo.style.display = 'block';
+    }catch(err){
+      console.error('Camera error:', err);
+      cameraVideo.style.display = 'none';
+      cameraError.style.display = 'flex';
+    }
+  }
+
+  function stopCamera(){
+    if(mediaStream){
+      mediaStream.getTracks().forEach(t => t.stop());
+      mediaStream = null;
+    }
+  }
+
+  captureBtn.addEventListener('click', () => {
+    if(!cameraVideo.videoWidth) return;
+    cameraCanvas.width = cameraVideo.videoWidth;
+    cameraCanvas.height = cameraVideo.videoHeight;
+    cameraCanvas.getContext('2d').drawImage(cameraVideo, 0, 0, cameraCanvas.width, cameraCanvas.height);
+    cameraCanvas.toBlob(blob => {
+      capturedBlob = blob;
+      selfiePreview.src = URL.createObjectURL(blob);
+      selfiePreview.style.display = 'block';
+      cameraVideo.style.display = 'none';
+      captureBtn.style.display = 'none';
+      retakeBtn.style.display = 'inline-flex';
+      submitClaimBtn.disabled = false;
+      stopCamera();
+    }, 'image/jpeg', 0.9);
+  });
+
+  retakeBtn.addEventListener('click', startCamera);
+
+  function openClaimModal(){
+    closeLightbox();
+    claimModal.classList.add('open');
+    startCamera();
+  }
+  function closeClaimModal(){
+    claimModal.classList.remove('open');
+    stopCamera();
+  }
+
+  document.getElementById('thatsMeBtn').addEventListener('click', openClaimModal);
+  document.getElementById('closeClaim').addEventListener('click', closeClaimModal);
+  document.getElementById('cancelClaim').addEventListener('click', closeClaimModal);
+  claimModal.addEventListener('click', e => { if(e.target === claimModal) closeClaimModal(); });
+
+  function resetClaimForm(){
+    capturedBlob = null;
+    mobileInput.value = '';
+    submitClaimBtn.disabled = true;
+    submitClaimBtn.textContent = 'Submit Claim';
+  }
+
+  // ---- Supabase ----
+  const SUPABASE_URL = 'https://ihhktqghdsiqmsjvzcnn.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_-gLigJKFMHW-OuIjOLw72w_lM0G5elo';
+  const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
+  submitClaimBtn.addEventListener('click', async () => {
+    const mobile = mobileInput.value.trim();
+    if(!capturedBlob){ showToast('Take a selfie first.'); return; }
+    if(!mobile){ showToast('Pop in your mobile number.'); mobileInput.focus(); return; }
+    if(!sb){ showToast('Backend not connected — try again shortly.'); return; }
+
+    submitClaimBtn.disabled = true;
+    submitClaimBtn.textContent = 'Sending…';
+
+    try{
+      const fileName = `claim-${Date.now()}-${Math.random().toString(36).slice(2,8)}.jpg`;
+      const { error: uploadError } = await sb.storage.from('selfies').upload(fileName, capturedBlob, { contentType: 'image/jpeg' });
+      if(uploadError) throw uploadError;
+
+      const { error: insertError } = await sb.from('claims').insert({
+        photo_id: currentPhoto.id,
+        mask_type: currentPhoto.type,
+        mobile_number: mobile,
+        selfie_path: fileName,
+        status: 'pending'
+      });
+      if(insertError) throw insertError;
+
+      closeClaimModal();
+      showToast(`Claim sent for Ticket No. ${currentPhoto ? String(currentPhoto.id).padStart(3,'0') : '—'}. We'll text you if it's a match.`);
+      resetClaimForm();
+    }catch(err){
+      console.error('Claim submit error:', err);
+      showToast('Something went wrong sending that — give it another go.');
+      submitClaimBtn.disabled = false;
+      submitClaimBtn.textContent = 'Submit Claim';
+    }
+  });
+
+  // ---- Share (demo) ----
+  document.getElementById('shareBtn').addEventListener('click', async () => {
+    const url = `${location.href.split('#')[0]}#ticket-${currentPhoto.id}`;
+    if(navigator.share){
+      try{ await navigator.share({ title: 'Shazza and Gazza', text: `Reckon this is you? Ticket No. ${String(currentPhoto.id).padStart(3,'0')}`, url }); }
+      catch(e){ /* user cancelled */ }
+    } else {
+      await navigator.clipboard.writeText(url);
+      showToast('Link copied — send it to your mate.');
+    }
+  });
+
+  // ---- Prizes modal ----
+  const prizesModal = document.getElementById('prizesModal');
+  function closePrizesModal(){ prizesModal.classList.remove('open'); }
+  document.getElementById('openPrizes').addEventListener('click', () => prizesModal.classList.add('open'));
+  document.getElementById('closePrizes').addEventListener('click', closePrizesModal);
+  prizesModal.addEventListener('click', e => { if(e.target === prizesModal) closePrizesModal(); });
+
+  // ---- Toast ----
+  const toast = document.getElementById('toast');
+  const toastText = document.getElementById('toastText');
+  let toastTimer;
+  function showToast(msg){
+    toastText.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 3800);
+  }
+</script>
+</body>
+</html>
