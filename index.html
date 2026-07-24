@@ -566,8 +566,8 @@
   </h1>
   <p>Yes? Claim your prize.</p>
   <div class="stats">
-    <div class="stat"><b>7</b><span>Photos today</span></div>
-    <div class="stat"><b>2</b><span>Already claimed</span></div>
+    <div class="stat"><b id="statTotal">&mdash;</b><span>Photos today</span></div>
+    <div class="stat"><b id="statClaimed">&mdash;</b><span>Already claimed</span></div>
     <div class="stat"><b>24h</b><span>Till next drop</span></div>
   </div>
 </section>
@@ -673,16 +673,10 @@
 </div>
 
 <script>
-  // ---- Mock data (swap for real API data later) ----
-  const photos = [
-    { id: 1, type: 'shazza', claimed: true,  file: '1.jpg' },
-    { id: 2, type: 'shazza', claimed: false, file: '2.jpg' },
-    { id: 3, type: 'gazza',  claimed: false, file: '3.jpg' },
-    { id: 4, type: 'shazza', claimed: true,  file: '4.jpg' },
-    { id: 5, type: 'gazza',  claimed: false, file: '5.jpg' },
-    { id: 6, type: 'shazza', claimed: false, file: '6.jpg' },
-    { id: 7, type: 'gazza',  claimed: false, file: '7.jpg' },
-  ];
+  // ---- Supabase ----
+  const SUPABASE_URL = 'https://ihhktqghdsiqmsjvzcnn.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_-gLigJKFMHW-OuIjOLw72w_lM0G5elo';
+  const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
   const icons = {
     shazza: '<img src="shazza.png" alt="Shazza mask">',
@@ -690,26 +684,66 @@
   };
 
   const grid = document.getElementById('grid');
+  let photos = []; // live data, populated by loadPhotos()
 
-  function ticketCard(p){
-    const label = p.type === 'shazza' ? 'Shazza' : 'Gazza';
-    const num = p.id;
+  function claimedTimeLabel(iso){
+    if(!iso) return '';
+    const d = new Date(iso);
+    return d.toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' });
+  }
+
+  function ticketCard(p, index){
+    const label = p.mask_type === 'shazza' ? 'Shazza' : 'Gazza';
+    const num = index + 1;
+    const timeLabel = p.claimed ? claimedTimeLabel(p.claimed_at) : '';
     return `
       <article class="ticket" tabindex="0" data-id="${p.id}" aria-label="Spotto ${num}, ${p.claimed ? label + ' claimed' : label + ' still open'}">
         <div class="photo">
-          <img src="${p.file}" alt="" loading="lazy">
-          <div class="mask-badge type-${p.type}" title="${label} is hidden in this photo">${icons[p.type]}</div>
-          ${p.claimed ? `<div class="stamp type-${p.type}">${label} Claimed</div>` : ''}
+          <img src="${p.imageUrl}" alt="" loading="lazy">
+          <div class="mask-badge type-${p.mask_type}" title="${label} is hidden in this photo">${icons[p.mask_type]}</div>
+          ${p.claimed ? `<div class="stamp type-${p.mask_type}">${label} Claimed${timeLabel ? ' &middot; ' + timeLabel : ''}</div>` : ''}
         </div>
         <div class="perf"></div>
         <div class="stub">
           <span class="ticket-no">Spotto <b>${num}</b></span>
-          <span class="status ${p.claimed ? 'won type-' + p.type : 'open'}">${p.claimed ? 'CLAIMED' : 'OPEN'}</span>
+          <span class="status ${p.claimed ? 'won type-' + p.mask_type : 'open'}">${p.claimed ? 'CLAIMED' : 'OPEN'}</span>
         </div>
       </article>`;
   }
 
-  grid.innerHTML = photos.map(ticketCard).join('');
+  function renderStats(){
+    const claimedCount = photos.filter(p => p.claimed).length;
+    document.getElementById('statTotal').textContent = photos.length;
+    document.getElementById('statClaimed').textContent = claimedCount;
+  }
+
+  async function loadPhotos(){
+    if(!sb){
+      grid.innerHTML = `<p style="color:var(--muted); font-family:'JetBrains Mono',monospace; font-size:13px;">Backend not connected.</p>`;
+      return;
+    }
+    const { data, error } = await sb
+      .from('photos')
+      .select('*')
+      .eq('is_active', true)
+      .order('created_at', { ascending: true });
+
+    if(error){
+      console.error('Load photos error:', error);
+      grid.innerHTML = `<p style="color:var(--muted); font-family:'JetBrains Mono',monospace; font-size:13px;">Couldn&rsquo;t load today&rsquo;s photos &mdash; try refreshing.</p>`;
+      return;
+    }
+
+    photos = (data || []).map(p => ({
+      ...p,
+      imageUrl: sb.storage.from('photos').getPublicUrl(p.image_path).data.publicUrl
+    }));
+
+    grid.innerHTML = photos.map(ticketCard).join('');
+    renderStats();
+  }
+
+  loadPhotos();
 
   // ---- Lightbox ----
   const lightbox = document.getElementById('lightbox');
@@ -717,12 +751,16 @@
   const lbMeta = document.getElementById('lbMeta');
   const lbStage = document.getElementById('lbStage');
   let currentPhoto = null;
+  let currentSpottoNum = null;
   let pz = null; // panzoom instance, created fresh each time the lightbox opens
 
   function openLightbox(id){
-    currentPhoto = photos.find(p => p.id === id);
-    lbImage.src = currentPhoto.file;
-    lbMeta.textContent = `SPOTTO ${currentPhoto.id} \u00B7 ${currentPhoto.type.toUpperCase()}`;
+    const index = photos.findIndex(p => p.id === id);
+    currentPhoto = photos[index];
+    if(!currentPhoto) return;
+    currentSpottoNum = index + 1;
+    lbImage.src = currentPhoto.imageUrl;
+    lbMeta.textContent = `SPOTTO ${currentSpottoNum} \u00B7 ${currentPhoto.mask_type.toUpperCase()}`;
     lightbox.classList.add('open');
     document.body.style.overflow = 'hidden';
     if(pz){ pz.dispose(); pz = null; }
@@ -745,12 +783,12 @@
 
   grid.addEventListener('click', e => {
     const card = e.target.closest('.ticket');
-    if(card) openLightbox(Number(card.dataset.id));
+    if(card) openLightbox(card.dataset.id);
   });
   grid.addEventListener('keydown', e => {
     if((e.key === 'Enter' || e.key === ' ') && e.target.classList.contains('ticket')){
       e.preventDefault();
-      openLightbox(Number(e.target.dataset.id));
+      openLightbox(e.target.dataset.id);
     }
   });
   document.getElementById('closeLightbox').addEventListener('click', closeLightbox);
@@ -842,11 +880,6 @@
     submitClaimBtn.textContent = 'Submit Claim';
   }
 
-  // ---- Supabase ----
-  const SUPABASE_URL = 'https://ihhktqghdsiqmsjvzcnn.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_-gLigJKFMHW-OuIjOLw72w_lM0G5elo';
-  const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
-
   submitClaimBtn.addEventListener('click', async () => {
     const mobile = mobileInput.value.trim();
     if(!capturedBlob){ showToast('Take a selfie first.'); return; }
@@ -863,7 +896,7 @@
 
       const { error: insertError } = await sb.from('claims').insert({
         photo_id: currentPhoto.id,
-        mask_type: currentPhoto.type,
+        mask_type: currentPhoto.mask_type,
         mobile_number: mobile,
         selfie_path: fileName,
         status: 'pending'
@@ -871,7 +904,7 @@
       if(insertError) throw insertError;
 
       closeClaimModal();
-      showToast(`Claim sent for Spotto ${currentPhoto ? currentPhoto.id : '—'}. We'll text you if it's a match.`);
+      showToast(`Claim sent for Spotto ${currentSpottoNum || '—'}. We'll text you if it's a match.`);
       resetClaimForm();
     }catch(err){
       console.error('Claim submit error:', err);
@@ -883,9 +916,9 @@
 
   // ---- Share (demo) ----
   document.getElementById('shareBtn').addEventListener('click', async () => {
-    const url = `${location.href.split('#')[0]}#ticket-${currentPhoto.id}`;
+    const url = `${location.href.split('#')[0]}#spotto-${currentSpottoNum}`;
     if(navigator.share){
-      try{ await navigator.share({ title: 'Shazza and Gazza', text: `Reckon this is you? Spotto ${currentPhoto.id}`, url }); }
+      try{ await navigator.share({ title: 'Shazza and Gazza', text: `Reckon this is you? Spotto ${currentSpottoNum}`, url }); }
       catch(e){ /* user cancelled */ }
     } else {
       await navigator.clipboard.writeText(url);
