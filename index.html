@@ -52,66 +52,26 @@
   header{
     display:flex;
     align-items:center;
-    justify-content:space-between;
-    gap:16px;
-    padding: 18px 28px;
-    border-bottom: 1px solid var(--line);
+    justify-content:center;
     position: sticky;
     top:0;
     z-index: 40;
+    padding: 22px 90px;
+    border-bottom: 1px solid var(--line);
     background: rgba(16,18,25,0.85);
     backdrop-filter: blur(10px);
   }
   .logo-slot{
-    height:48px;
+    height: clamp(150px, 28vw, 220px);
     width:auto;
     object-fit:contain;
-    flex-shrink:0;
-  }
-  .brand-mark{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    line-height:1;
-    flex:1;
-    min-width:0;
-  }
-  .brand-mark .title{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:10px;
-    white-space:nowrap;
-  }
-  .title-text{
-    font-family:'Bebas Neue', sans-serif;
-    font-size: clamp(22px, 4vw, 34px);
-    letter-spacing:0.03em;
-    background: linear-gradient(90deg, var(--gold), #ffd98a 45%, var(--gold));
-    -webkit-background-clip:text;
-    background-clip:text;
-    color:transparent;
-  }
-  .title-mask{
-    width: 34px;
-    height: 34px;
-    min-width: 34px;
-    object-fit: cover;
-    object-position: center;
-    border-radius: 50%;
-    border: 2px solid var(--line-strong);
-    flex-shrink:0;
     display:block;
   }
-  .brand-mark .sub{
-    font-family:'JetBrains Mono', monospace;
-    font-size:10px;
-    letter-spacing:0.18em;
-    text-transform:uppercase;
-    color: var(--muted);
-    margin-top:2px;
-  }
   .prizes-btn{
+    position:absolute;
+    top:50%;
+    right:20px;
+    transform: translateY(-50%);
     flex-shrink:0;
     display:flex;
     align-items:center;
@@ -127,7 +87,7 @@
     cursor:pointer;
     transition: background .15s ease, transform .15s ease, border-color .15s ease;
   }
-  .prizes-btn:hover{ background:#2c3245; border-color: var(--gold-dim); transform: translateY(-1px); }
+  .prizes-btn:hover{ background:#2c3245; border-color: var(--gold-dim); transform: translateY(-50%) translateY(-1px); }
   .prizes-btn svg{ width:16px; height:16px; }
 
   /* ---------- Hero strip ---------- */
@@ -150,6 +110,13 @@
     letter-spacing:0.01em;
     margin-top:8px;
     line-height:0.95;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap: 16px;
+  }
+  .hero-line{
     display:flex;
     flex-wrap:wrap;
     align-items:center;
@@ -557,9 +524,9 @@
   }
 
   @media (max-width: 560px){
-    header{ padding:14px 16px; }
-    .logo-slot{ height:34px; }
-    .prizes-btn{ padding:9px 12px; font-size:0; }
+    header{ padding:16px 16px; }
+    .logo-slot{ height:130px; }
+    .prizes-btn{ right:14px; padding:9px 12px; font-size:0; }
     .prizes-btn svg{ width:18px; height:18px; }
     .prizes-btn::after{ content:"Prizes"; font-size:12px; margin-left:0; }
     .hero{ padding:28px 18px 4px; }
@@ -577,10 +544,6 @@
 
 <header>
   <img class="logo-slot" src="logo.png" alt="Shazza and Gazza logo">
-  <div class="brand-mark">
-    <h1 class="title"><img class="title-mask" src="shazza.png" alt="Shazza" width="34" height="34"><span class="title-text">SHAZZA &amp; GAZZA</span><img class="title-mask" src="gazza.png" alt="Gazza" width="34" height="34"></h1>
-    <div class="sub">Today&rsquo;s Draw &middot; 7 Photos Live</div>
-  </div>
   <button class="prizes-btn" id="openPrizes">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/><path d="M12 7S8 7 8 4.5 10 1 12 4c2-3 4-.5 4 0S16 7 12 7Z"/></svg>
     <span>Prizes</span>
@@ -588,8 +551,11 @@
 </header>
 
 <section class="hero">
-  <div class="kicker">Gallery changes every 24 hours</div>
-  <h1><span>Is it <span class="accent">you</span> under</span><img class="headline-mask" src="shazza.png" alt="Shazza" width="56" height="56"><span>or</span><img class="headline-mask" src="gazza.png" alt="Gazza" width="56" height="56"><span>?</span></h1>
+  <div class="kicker">7 Spottos to crack before 6pm AEST every day</div>
+  <h1>
+    <div class="hero-line">Is it <span class="accent">you</span> under</div>
+    <div class="hero-line"><img class="headline-mask" src="shazza.png" alt="Shazza" width="56" height="56"> or <img class="headline-mask" src="gazza.png" alt="Gazza" width="56" height="56"> ?</div>
+  </h1>
   <p>Yes? Claim your prize.</p>
   <div class="stats">
     <div class="stat"><b>7</b><span>Photos today</span></div>
@@ -609,7 +575,7 @@
   <div class="panel">
     <div class="lb-topbar">
       <div class="lb-badge-row">
-        <span class="meta mono" id="lbMeta">TICKET NO. 001</span>
+        <span class="meta mono" id="lbMeta">SPOTTO 1</span>
       </div>
       <button class="icon-btn" id="closeLightbox" aria-label="Close">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
@@ -637,7 +603,7 @@
   <div class="panel">
     <div class="modal-head">
       <div>
-        <h2>Claim This Ticket</h2>
+        <h2>Claim This Spotto</h2>
         <p class="modal-sub">Snap a quick selfie and pop in your mobile. Our admin checks it against the original photo &mdash; no automated matching, an actual human looks at it.</p>
       </div>
       <button class="icon-btn" id="closeClaim" aria-label="Close">
@@ -684,8 +650,8 @@
       <img src="aldi.jpeg" alt="Aldi">
     </div>
     <div class="prize-body">
-      <h2>$50 if it&rsquo;s you</h2>
-      <p>Claim a photo and it checks out? You walk away with a $50 Aldi gift card. Simple as that.</p>
+      <h2>$20 if it&rsquo;s you</h2>
+      <p>Claim a photo and it checks out? You walk away with a $20 Aldi gift card. Simple as that.</p>
       <div class="modal-actions">
         <button class="btn btn-primary" id="closePrizes" style="width:100%">Got It</button>
       </div>
@@ -719,9 +685,9 @@
 
   function ticketCard(p){
     const label = p.type === 'shazza' ? 'Shazza' : 'Gazza';
-    const num = String(p.id).padStart(3, '0');
+    const num = p.id;
     return `
-      <article class="ticket" tabindex="0" data-id="${p.id}" aria-label="Ticket ${num}, ${p.claimed ? label + ' claimed' : label + ' still open'}">
+      <article class="ticket" tabindex="0" data-id="${p.id}" aria-label="Spotto ${num}, ${p.claimed ? label + ' claimed' : label + ' still open'}">
         <div class="photo">
           <img src="${p.file}" alt="" loading="lazy">
           <div class="mask-badge type-${p.type}" title="${label} is hidden in this photo">${icons[p.type]}</div>
@@ -729,7 +695,7 @@
         </div>
         <div class="perf"></div>
         <div class="stub">
-          <span class="ticket-no">No. <b>${num}</b></span>
+          <span class="ticket-no">Spotto <b>${num}</b></span>
           <span class="status ${p.claimed ? 'won type-' + p.type : 'open'}">${p.claimed ? 'CLAIMED' : 'OPEN'}</span>
         </div>
       </article>`;
@@ -748,7 +714,7 @@
   function openLightbox(id){
     currentPhoto = photos.find(p => p.id === id);
     lbImage.src = currentPhoto.file;
-    lbMeta.textContent = `TICKET NO. ${String(currentPhoto.id).padStart(3,'0')} \u00B7 ${currentPhoto.type.toUpperCase()}`;
+    lbMeta.textContent = `SPOTTO ${currentPhoto.id} \u00B7 ${currentPhoto.type.toUpperCase()}`;
     resetZoom();
     lightbox.classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -946,7 +912,7 @@
       if(insertError) throw insertError;
 
       closeClaimModal();
-      showToast(`Claim sent for Ticket No. ${currentPhoto ? String(currentPhoto.id).padStart(3,'0') : '—'}. We'll text you if it's a match.`);
+      showToast(`Claim sent for Spotto ${currentPhoto ? currentPhoto.id : '—'}. We'll text you if it's a match.`);
       resetClaimForm();
     }catch(err){
       console.error('Claim submit error:', err);
@@ -960,7 +926,7 @@
   document.getElementById('shareBtn').addEventListener('click', async () => {
     const url = `${location.href.split('#')[0]}#ticket-${currentPhoto.id}`;
     if(navigator.share){
-      try{ await navigator.share({ title: 'Shazza and Gazza', text: `Reckon this is you? Ticket No. ${String(currentPhoto.id).padStart(3,'0')}`, url }); }
+      try{ await navigator.share({ title: 'Shazza and Gazza', text: `Reckon this is you? Spotto ${currentPhoto.id}`, url }); }
       catch(e){ /* user cancelled */ }
     } else {
       await navigator.clipboard.writeText(url);
