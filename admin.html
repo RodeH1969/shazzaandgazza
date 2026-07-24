@@ -249,6 +249,23 @@
   // ---- Claims ----
   async function loadClaims(){
     const list = document.getElementById('claimsList');
+
+    // Load all photos too, so we can show which Spotto each claim is against
+    const { data: photoData, error: photoError } = await sb
+      .from('photos')
+      .select('*')
+      .order('created_at', { ascending: true });
+
+    const photoMap = {};
+    if(!photoError && photoData){
+      photoData.forEach((p, i) => {
+        photoMap[p.id] = {
+          num: i + 1,
+          url: sb.storage.from('photos').getPublicUrl(p.image_path).data.publicUrl
+        };
+      });
+    }
+
     const { data, error } = await sb
       .from('claims')
       .select('*')
@@ -267,12 +284,16 @@
     for(const claim of data){
       const { data: signed } = await sb.storage.from('selfies').createSignedUrl(claim.selfie_path, 3600);
       const selfieUrl = signed ? signed.signedUrl : '';
+      const spotto = photoMap[claim.photo_id];
       const card = document.createElement('div');
       card.className = 'card claim-card';
       card.innerHTML = `
-        <img class="claim-selfie" src="${selfieUrl}" alt="Selfie" loading="lazy">
+        <div style="display:flex; gap:8px; flex-shrink:0;">
+          ${spotto ? `<img class="claim-selfie" src="${spotto.url}" alt="Spotto photo" loading="lazy" title="Spotto ${spotto.num}">` : `<div class="claim-selfie" style="display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);text-align:center;padding:4px;">Spotto not found</div>`}
+          <img class="claim-selfie" src="${selfieUrl}" alt="Selfie" loading="lazy" title="Their selfie">
+        </div>
         <div class="claim-info">
-          <div class="row"><span class="badge ${claim.mask_type}">${claim.mask_type}</span></div>
+          <div class="row"><b>${spotto ? 'Spotto ' + spotto.num : 'Unknown Spotto'}</b> &middot; <span class="badge ${claim.mask_type}">${claim.mask_type}</span></div>
           <div class="row">Mobile: <b>${claim.mobile_number}</b></div>
           <div class="row">Submitted: <b>${fmtTime(claim.created_at)}</b></div>
           <div class="row">Status: <b>${claim.status}</b></div>
