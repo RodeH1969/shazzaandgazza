@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/panzoom@9.4.3/dist/panzoom.min.js"></script>
 <style>
   :root{
     --bg: #101219;
@@ -338,7 +339,7 @@
     object-fit:contain;
     user-select:none;
     -webkit-user-drag:none;
-    transform-origin: center center;
+    transform-origin: 0 0;
   }
   .lb-hint{
     position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
@@ -709,26 +710,30 @@
   const lbMeta = document.getElementById('lbMeta');
   const lbStage = document.getElementById('lbStage');
   let currentPhoto = null;
-  let scale = 1, panX = 0, panY = 0;
+  let pz = null; // panzoom instance, created fresh each time the lightbox opens
 
   function openLightbox(id){
     currentPhoto = photos.find(p => p.id === id);
     lbImage.src = currentPhoto.file;
     lbMeta.textContent = `SPOTTO ${currentPhoto.id} \u00B7 ${currentPhoto.type.toUpperCase()}`;
-    resetZoom();
     lightbox.classList.add('open');
     document.body.style.overflow = 'hidden';
+    if(pz){ pz.dispose(); pz = null; }
+    if(window.panzoom){
+      pz = window.panzoom(lbImage, {
+        maxZoom: 4,
+        minZoom: 1,
+        bounds: true,
+        boundsPadding: 1,
+        zoomDoubleClickSpeed: 1,
+        smoothScroll: false
+      });
+    }
   }
   function closeLightbox(){
     lightbox.classList.remove('open');
     document.body.style.overflow = '';
-  }
-  function resetZoom(){
-    scale = 1; panX = 0; panY = 0;
-    lbImage.style.transform = `translate(0px,0px) scale(1)`;
-  }
-  function applyTransform(){
-    lbImage.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+    if(pz){ pz.dispose(); pz = null; }
   }
 
   grid.addEventListener('click', e => {
@@ -743,59 +748,6 @@
   });
   document.getElementById('closeLightbox').addEventListener('click', closeLightbox);
   lightbox.addEventListener('click', e => { if(e.target === lightbox) closeLightbox(); });
-
-  lbStage.addEventListener('wheel', e => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.15 : 0.15;
-    scale = Math.min(3, Math.max(1, scale + delta));
-    if(scale === 1){ panX = 0; panY = 0; }
-    applyTransform();
-  }, { passive:false });
-
-  let dragging = false, lastX = 0, lastY = 0;
-  lbStage.addEventListener('mousedown', e => {
-    if(scale === 1) return;
-    dragging = true; lastX = e.clientX; lastY = e.clientY;
-    lbStage.style.cursor = 'grabbing';
-  });
-  window.addEventListener('mousemove', e => {
-    if(!dragging) return;
-    panX += e.clientX - lastX; panY += e.clientY - lastY;
-    lastX = e.clientX; lastY = e.clientY;
-    applyTransform();
-  });
-  window.addEventListener('mouseup', () => { dragging = false; lbStage.style.cursor = 'grab'; });
-
-  // basic touch pinch + pan
-  let touchStartDist = null, startScale = 1;
-  lbStage.addEventListener('touchstart', e => {
-    if(e.touches.length === 2){
-      touchStartDist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY
-      );
-      startScale = scale;
-    } else if(e.touches.length === 1 && scale > 1){
-      dragging = true; lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
-    }
-  }, { passive:true });
-  lbStage.addEventListener('touchmove', e => {
-    if(e.touches.length === 2 && touchStartDist){
-      const dist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY
-      );
-      scale = Math.min(3, Math.max(1, startScale * (dist / touchStartDist)));
-      applyTransform();
-    } else if(e.touches.length === 1 && dragging){
-      panX += e.touches[0].clientX - lastX;
-      panY += e.touches[0].clientY - lastY;
-      lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
-      applyTransform();
-    }
-  }, { passive:true });
-  lbStage.addEventListener('touchend', () => { dragging = false; touchStartDist = null; });
-  lbStage.addEventListener('dblclick', resetZoom);
 
   document.addEventListener('keydown', e => {
     if(e.key === 'Escape'){
