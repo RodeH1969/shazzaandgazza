@@ -780,6 +780,8 @@
     lbMeta.textContent = showReveal
       ? `SPOTTO ${currentSpottoNum} \u00B7 REVEALED`
       : `SPOTTO ${currentSpottoNum} \u00B7 ${currentPhoto.mask_type.toUpperCase()}`;
+    document.getElementById('thatsMeBtn').style.display = currentPhoto.claimed ? 'none' : 'inline-flex';
+    document.getElementById('shareBtn').style.flex = currentPhoto.claimed ? '1' : '';
     lightbox.classList.add('open');
     document.body.style.overflow = 'hidden';
     if(pz){ pz.dispose(); pz = null; }
@@ -936,11 +938,12 @@
   // ---- Share (demo) ----
   document.getElementById('shareBtn').addEventListener('click', async () => {
     const url = `${location.href.split('#')[0]}#spotto-${currentSpottoNum}`;
+    const shareText = `Is this you? Check out Spotto ${currentSpottoNum} on Shazza & Gazza! \u{1F60A}`;
     if(navigator.share){
-      try{ await navigator.share({ title: 'Shazza and Gazza', text: `Reckon this is you? Spotto ${currentSpottoNum}`, url }); }
+      try{ await navigator.share({ title: 'Shazza and Gazza', text: shareText, url }); }
       catch(e){ /* user cancelled */ }
     } else {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(`${shareText} ${url}`);
       showToast('Link copied — send it to your mate.');
     }
   });
