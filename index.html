@@ -135,6 +135,22 @@
     border-radius: 50%;
     border: 2px solid var(--line-strong);
     display:block;
+    transform-origin: center center;
+  }
+  .headline-mask.mask-shazza{ animation: pulseShazza 6s ease-in-out infinite; }
+  .headline-mask.mask-gazza{ animation: pulseGazza 6s ease-in-out infinite; }
+  @keyframes pulseShazza{
+    0%, 8%   { transform: scale(1); }
+    25%      { transform: scale(2); }
+    42%, 100%{ transform: scale(1); }
+  }
+  @keyframes pulseGazza{
+    0%, 58%  { transform: scale(1); }
+    75%      { transform: scale(2); }
+    92%, 100%{ transform: scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .headline-mask.mask-shazza, .headline-mask.mask-gazza{ animation: none; }
   }
   .hero p{
     color: var(--muted);
@@ -577,7 +593,7 @@
   <div class="kicker">7 Spottos to crack before 6pm AEST every day</div>
   <h1>
     <div class="hero-line">Is it <span class="accent">you</span> under</div>
-    <div class="hero-line"><img class="headline-mask" src="shazza.png" alt="Shazza" width="56" height="56"> or <img class="headline-mask" src="gazza.png" alt="Gazza" width="56" height="56"> ?</div>
+    <div class="hero-line"><img class="headline-mask mask-shazza" src="shazza.png" alt="Shazza" width="56" height="56"> or <img class="headline-mask mask-gazza" src="gazza.png" alt="Gazza" width="56" height="56"> ?</div>
   </h1>
   <p>Yes? Claim your prize.</p>
   <div class="stats">
