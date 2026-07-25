@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/panzoom@9.4.3/dist/panzoom.min.js"></script>
 <style>
   :root{
     --bg: #101219;
@@ -198,6 +199,13 @@
   </main>
 </div>
 
+<div id="zoomLightbox" style="display:none; position:fixed; inset:0; background:rgba(6,7,10,0.95); z-index:200; align-items:center; justify-content:center; padding:16px;">
+  <button id="closeZoomLightbox" style="position:absolute; top:16px; right:16px; width:42px; height:42px; border-radius:50%; background:var(--surface-2); border:1px solid var(--line-strong); color:var(--text); font-size:20px; cursor:pointer;">&times;</button>
+  <div style="width:100%; height:100%; max-width:900px; max-height:85vh; overflow:hidden; touch-action:none; position:relative;">
+    <img id="zoomLightboxImg" src="" alt="" style="width:100%; height:100%; object-fit:contain; transform-origin:0 0;">
+  </div>
+</div>
+
 <div id="compareModal" style="display:none; position:fixed; inset:0; background:rgba(8,9,13,0.9); z-index:100; align-items:center; justify-content:center; padding:20px;">
   <div style="background:var(--surface); border:1px solid var(--line-strong); border-radius:12px; max-width:700px; width:100%; padding:20px; max-height:90vh; overflow-y:auto;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
@@ -208,12 +216,12 @@
     <div style="display:flex; gap:16px; flex-wrap:wrap;">
       <div style="flex:1; min-width:240px;">
         <p class="mono" style="font-size:11px; color:var(--muted); margin-bottom:6px;">REAL FACE (ORIGINAL)</p>
-        <img id="compareOriginal" src="" alt="Original photo" style="width:100%; border-radius:8px; border:1px solid var(--line-strong);">
+        <img id="compareOriginal" class="zoomable" src="" alt="Original photo" style="width:100%; border-radius:8px; border:1px solid var(--line-strong); cursor:zoom-in;">
         <a id="compareDownload" href="" download target="_blank" class="btn btn-secondary" style="display:inline-block; margin-top:10px; text-decoration:none; text-align:center; width:100%;">Save Original</a>
       </div>
       <div style="flex:1; min-width:240px;">
         <p class="mono" style="font-size:11px; color:var(--muted); margin-bottom:6px;">THEIR SELFIE</p>
-        <img id="compareSelfie" src="" alt="Their selfie" style="width:100%; border-radius:8px; border:1px solid var(--line-strong);">
+        <img id="compareSelfie" class="zoomable" src="" alt="Their selfie" style="width:100%; border-radius:8px; border:1px solid var(--line-strong); cursor:zoom-in;">
       </div>
     </div>
   </div>
@@ -316,8 +324,8 @@
       card.className = 'card claim-card';
       card.innerHTML = `
         <div style="display:flex; gap:8px; flex-shrink:0;">
-          ${spotto ? `<img class="claim-selfie" src="${spotto.url}" alt="Spotto photo" loading="lazy" title="Spotto ${spotto.num}">` : `<div class="claim-selfie" style="display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);text-align:center;padding:4px;">Spotto not found</div>`}
-          <img class="claim-selfie" src="${selfieUrl}" alt="Selfie" loading="lazy" title="Their selfie">
+          ${spotto ? `<img class="claim-selfie zoomable" src="${spotto.url}" alt="Spotto photo" loading="lazy" title="Spotto ${spotto.num}">` : `<div class="claim-selfie" style="display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);text-align:center;padding:4px;">Spotto not found</div>`}
+          <img class="claim-selfie zoomable" src="${selfieUrl}" alt="Selfie" loading="lazy" title="Their selfie">
         </div>
         <div class="claim-info">
           <div class="row"><b>${spotto ? 'Spotto ' + spotto.num : 'Unknown Spotto'}</b> &middot; <span class="badge ${claim.mask_type}">${claim.mask_type}</span></div>
@@ -381,6 +389,37 @@
     document.getElementById('compareModal').style.display = 'none';
   });
 
+  // ---- Zoom lightbox (works for any .zoomable image, including ones added later) ----
+  const zoomLightbox = document.getElementById('zoomLightbox');
+  const zoomLightboxImg = document.getElementById('zoomLightboxImg');
+  let zoomPz = null;
+
+  document.addEventListener('click', e => {
+    const img = e.target.closest('.zoomable');
+    if(!img || !img.src) return;
+    zoomLightboxImg.src = img.src;
+    zoomLightbox.style.display = 'flex';
+    if(zoomPz){ zoomPz.dispose(); zoomPz = null; }
+    if(window.panzoom){
+      zoomPz = window.panzoom(zoomLightboxImg, {
+        maxZoom: 4,
+        minZoom: 1,
+        bounds: true,
+        boundsPadding: 1,
+        zoomDoubleClickSpeed: 1,
+        smoothScroll: false
+      });
+    }
+  });
+
+  function closeZoomLightbox(){
+    zoomLightbox.style.display = 'none';
+    if(zoomPz){ zoomPz.dispose(); zoomPz = null; }
+  }
+  document.getElementById('closeZoomLightbox').addEventListener('click', closeZoomLightbox);
+  zoomLightbox.addEventListener('click', e => { if(e.target === zoomLightbox) closeZoomLightbox(); });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape') closeZoomLightbox(); });
+
   async function approveClaim(claimId, photoId){
     if(!confirm('Approve this claim? This puts the claimed sash up on the live site.')) return;
     const now = new Date().toISOString();
@@ -414,7 +453,7 @@
       const url = sb.storage.from('photos').getPublicUrl(p.image_path).data.publicUrl;
       return `
         <div class="photo-card ${p.is_active ? '' : 'inactive'}">
-          <img src="${url}" alt="" loading="lazy">
+          <img class="zoomable" src="${url}" alt="" loading="lazy" style="cursor:zoom-in;">
           <div class="pbody">
             <div class="prow">
               <span class="badge ${p.mask_type}">${p.mask_type}</span>
