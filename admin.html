@@ -173,10 +173,15 @@
     <div class="tab-panel" id="photosPanel">
       <div class="card upload-card">
         <h3 style="margin-bottom:14px;">Add today's photo</h3>
+        <p style="color:var(--muted); font-size:12px; margin-bottom:14px;">Upload both: the public photo (as players will see it) and the real, unmasked photo you'll compare selfies against. The original stays private &mdash; only you can see it.</p>
         <div class="upload-row">
           <div class="field">
-            <label for="photoFileInput">Image file</label>
+            <label for="photoFileInput">Public photo</label>
             <input type="file" id="photoFileInput" accept="image/*">
+          </div>
+          <div class="field">
+            <label for="originalFileInput">Original (private, unmasked)</label>
+            <input type="file" id="originalFileInput" accept="image/*">
           </div>
           <div class="field" style="max-width:160px;">
             <label for="maskTypeSelect">Hidden face is</label>
@@ -191,6 +196,27 @@
       <div class="photo-grid" id="photosGrid"><p class="empty-note">Loading photos&hellip;</p></div>
     </div>
   </main>
+</div>
+
+<div id="compareModal" style="display:none; position:fixed; inset:0; background:rgba(8,9,13,0.9); z-index:100; align-items:center; justify-content:center; padding:20px;">
+  <div style="background:var(--surface); border:1px solid var(--line-strong); border-radius:12px; max-width:700px; width:100%; padding:20px; max-height:90vh; overflow-y:auto;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <h3 class="display" style="font-size:22px; color:var(--gold);">COMPARE FACES</h3>
+      <button class="btn btn-secondary" id="closeCompare">Close</button>
+    </div>
+    <p id="compareNoOriginal" style="display:none; color:var(--muted); font-size:13px; margin-bottom:14px;">No original photo was saved for this Spotto — nothing to compare against.</p>
+    <div style="display:flex; gap:16px; flex-wrap:wrap;">
+      <div style="flex:1; min-width:240px;">
+        <p class="mono" style="font-size:11px; color:var(--muted); margin-bottom:6px;">REAL FACE (ORIGINAL)</p>
+        <img id="compareOriginal" src="" alt="Original photo" style="width:100%; border-radius:8px; border:1px solid var(--line-strong);">
+        <a id="compareDownload" href="" download target="_blank" class="btn btn-secondary" style="display:inline-block; margin-top:10px; text-decoration:none; text-align:center; width:100%;">Save Original</a>
+      </div>
+      <div style="flex:1; min-width:240px;">
+        <p class="mono" style="font-size:11px; color:var(--muted); margin-bottom:6px;">THEIR SELFIE</p>
+        <img id="compareSelfie" src="" alt="Their selfie" style="width:100%; border-radius:8px; border:1px solid var(--line-strong);">
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -261,7 +287,8 @@
       photoData.forEach((p, i) => {
         photoMap[p.id] = {
           num: i + 1,
-          url: sb.storage.from('photos').getPublicUrl(p.image_path).data.publicUrl
+          url: sb.storage.from('photos').getPublicUrl(p.image_path).data.publicUrl,
+          originalPath: p.original_path
         };
       });
     }
@@ -297,11 +324,12 @@
           <div class="row">Mobile: <b>${claim.mobile_number}</b></div>
           <div class="row">Submitted: <b>${fmtTime(claim.created_at)}</b></div>
           <div class="row">Status: <b>${claim.status}</b></div>
-          ${claim.status === 'pending' ? `
-            <div class="claim-actions">
+          <div class="claim-actions">
+            <button class="btn btn-secondary compare-btn" data-selfie="${selfieUrl}" data-original="${spotto ? spotto.originalPath || '' : ''}">Compare Faces</button>
+            ${claim.status === 'pending' ? `
               <button class="btn btn-primary approve-btn" data-id="${claim.id}" data-photo="${claim.photo_id}" data-type="${claim.mask_type}">Approve</button>
-              <button class="btn btn-danger reject-btn" data-id="${claim.id}">Reject</button>
-            </div>` : ''}
+              <button class="btn btn-danger reject-btn" data-id="${claim.id}">Reject</button>` : ''}
+          </div>
         </div>`;
       list.appendChild(card);
     }
@@ -312,7 +340,46 @@
     list.querySelectorAll('.reject-btn').forEach(btn => {
       btn.addEventListener('click', () => rejectClaim(btn.dataset.id));
     });
+    list.querySelectorAll('.compare-btn').forEach(btn => {
+      btn.addEventListener('click', () => openCompare(btn.dataset.original, btn.dataset.selfie));
+    });
   }
+
+  // ---- Compare popup ----
+  async function openCompare(originalPath, selfieUrl){
+    const modal = document.getElementById('compareModal');
+    const originalImg = document.getElementById('compareOriginal');
+    const selfieImg = document.getElementById('compareSelfie');
+    const downloadLink = document.getElementById('compareDownload');
+    const noOriginalMsg = document.getElementById('compareNoOriginal');
+
+    selfieImg.src = selfieUrl;
+    modal.style.display = 'flex';
+
+    if(!originalPath){
+      originalImg.style.display = 'none';
+      downloadLink.style.display = 'none';
+      noOriginalMsg.style.display = 'block';
+      return;
+    }
+    noOriginalMsg.style.display = 'none';
+    originalImg.style.display = 'block';
+
+    const { data } = sb.storage.from('originals').getPublicUrl(originalPath);
+    if(data && data.publicUrl){
+      originalImg.src = data.publicUrl;
+      downloadLink.href = data.publicUrl;
+      downloadLink.style.display = 'inline-block';
+    } else {
+      originalImg.style.display = 'none';
+      downloadLink.style.display = 'none';
+      noOriginalMsg.textContent = "Couldn't load the original photo.";
+      noOriginalMsg.style.display = 'block';
+    }
+  }
+  document.getElementById('closeCompare').addEventListener('click', () => {
+    document.getElementById('compareModal').style.display = 'none';
+  });
 
   async function approveClaim(claimId, photoId){
     if(!confirm('Approve this claim? This puts the claimed sash up on the live site.')) return;
@@ -379,16 +446,26 @@
 
   document.getElementById('uploadPhotoBtn').addEventListener('click', async () => {
     const fileInput = document.getElementById('photoFileInput');
+    const originalInput = document.getElementById('originalFileInput');
     const maskType = document.getElementById('maskTypeSelect').value;
     const file = fileInput.files[0];
-    if(!file){ alert('Choose an image first.'); return; }
+    const originalFile = originalInput.files[0];
+    if(!file){ alert('Choose the public photo first.'); return; }
+    if(!originalFile){ alert('Choose the original (unmasked) photo too — you\'ll need it to check claims.'); return; }
 
-    const fileName = `photo-${Date.now()}-${Math.random().toString(36).slice(2,8)}.jpg`;
+    const stamp = `${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+    const fileName = `photo-${stamp}.jpg`;
+    const originalName = `original-${stamp}.jpg`;
+
     const { error: uploadError } = await sb.storage.from('photos').upload(fileName, file);
-    if(uploadError){ alert('Upload failed: ' + uploadError.message); return; }
+    if(uploadError){ alert('Public photo upload failed: ' + uploadError.message); return; }
+
+    const { error: originalUploadError } = await sb.storage.from('originals').upload(originalName, originalFile);
+    if(originalUploadError){ alert('Original photo upload failed: ' + originalUploadError.message); return; }
 
     const { error: insertError } = await sb.from('photos').insert({
       image_path: fileName,
+      original_path: originalName,
       mask_type: maskType,
       claimed: false,
       is_active: true
@@ -396,6 +473,7 @@
     if(insertError){ alert('Saving photo failed: ' + insertError.message); return; }
 
     fileInput.value = '';
+    originalInput.value = '';
     loadPhotos();
   });
 </script>

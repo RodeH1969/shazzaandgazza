@@ -542,12 +542,19 @@
     .lb-stage{ height:46vh; }
     .lb-actions{ flex-direction:column; }
     .stamp{
-      top:16px; right:-52px;
-      width:180px;
-      font-size:12px;
-      letter-spacing:0.04em;
-      padding:6px 0;
+      position:absolute;
+      top:10px; right:10px;
+      left:auto;
+      width:auto;
+      max-width: calc(100% - 20px);
+      transform:none;
+      border-radius:6px;
+      font-size:11px;
+      letter-spacing:0.03em;
+      padding:6px 10px;
       white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
   }
 
@@ -744,7 +751,8 @@
 
     photos = (data || []).map(p => ({
       ...p,
-      imageUrl: sb.storage.from('photos').getPublicUrl(p.image_path).data.publicUrl
+      imageUrl: sb.storage.from('photos').getPublicUrl(p.image_path).data.publicUrl,
+      revealUrl: p.original_path ? sb.storage.from('originals').getPublicUrl(p.original_path).data.publicUrl : null
     }));
 
     grid.innerHTML = photos.map(ticketCard).join('');
@@ -767,8 +775,11 @@
     currentPhoto = photos[index];
     if(!currentPhoto) return;
     currentSpottoNum = index + 1;
-    lbImage.src = currentPhoto.imageUrl;
-    lbMeta.textContent = `SPOTTO ${currentSpottoNum} \u00B7 ${currentPhoto.mask_type.toUpperCase()}`;
+    const showReveal = currentPhoto.claimed && currentPhoto.revealUrl;
+    lbImage.src = showReveal ? currentPhoto.revealUrl : currentPhoto.imageUrl;
+    lbMeta.textContent = showReveal
+      ? `SPOTTO ${currentSpottoNum} \u00B7 REVEALED`
+      : `SPOTTO ${currentSpottoNum} \u00B7 ${currentPhoto.mask_type.toUpperCase()}`;
     lightbox.classList.add('open');
     document.body.style.overflow = 'hidden';
     if(pz){ pz.dispose(); pz = null; }
