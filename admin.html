@@ -191,6 +191,10 @@
               <option value="gazza">Gazza</option>
             </select>
           </div>
+          <div class="field">
+            <label for="locationInput">Location</label>
+            <input type="text" id="locationInput" placeholder="e.g. New Farm Parkrun">
+          </div>
           <button class="btn btn-primary" id="uploadPhotoBtn">Upload</button>
         </div>
       </div>
@@ -487,6 +491,7 @@
     const fileInput = document.getElementById('photoFileInput');
     const originalInput = document.getElementById('originalFileInput');
     const maskType = document.getElementById('maskTypeSelect').value;
+    const location = document.getElementById('locationInput').value.trim();
     const file = fileInput.files[0];
     const originalFile = originalInput.files[0];
     if(!file){ alert('Choose the public photo first.'); return; }
@@ -506,6 +511,7 @@
       image_path: fileName,
       original_path: originalName,
       mask_type: maskType,
+      location: location || null,
       claimed: false,
       is_active: true
     });
@@ -513,6 +519,7 @@
 
     fileInput.value = '';
     originalInput.value = '';
+    document.getElementById('locationInput').value = '';
     loadPhotos();
   });
 </script>

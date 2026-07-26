@@ -194,6 +194,35 @@
 
   /* ---------- Grid ---------- */
   .grid-wrap{ max-width:1180px; margin:0 auto; padding: 36px 28px 100px; }
+
+  .ticker-banner{
+    background:#ffffff;
+    overflow:hidden;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    white-space:nowrap;
+  }
+  .ticker-track{
+    display:inline-flex;
+    animation: tickerScroll 18s linear infinite;
+  }
+  .ticker-item{
+    display:inline-block;
+    padding: 10px 40px;
+    font-family:'JetBrains Mono', monospace;
+    font-weight:700;
+    font-size:14px;
+    letter-spacing:0.03em;
+    color:#1656d6;
+    white-space:nowrap;
+  }
+  @keyframes tickerScroll{
+    0%{ transform: translateX(0); }
+    100%{ transform: translateX(-50%); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .ticker-track{ animation:none; }
+  }
   .grid{
     display:grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -236,10 +265,29 @@
     display:flex; align-items:center; justify-content:center;
     box-shadow: 0 4px 10px rgba(0,0,0,0.4);
     border:2px solid rgba(16,18,25,0.7);
+    z-index:2;
   }
   .mask-badge.type-shazza{ background: var(--shazza); }
   .mask-badge.type-gazza{ background: var(--gazza); }
   .mask-badge img{ width:100%; height:100%; object-fit:cover; border-radius:50%; display:block; }
+
+  .location-strip{
+    position:absolute;
+    left:0; right:0; bottom:0;
+    z-index:1;
+    background: #1e8a3e;
+    color:#ffffff;
+    font-weight:700;
+    font-size:12px;
+    letter-spacing:0.03em;
+    text-transform:uppercase;
+    text-align:center;
+    padding:7px 12px 7px 54px;
+    font-family:'JetBrains Mono', monospace;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
 
   .stamp{
     position:absolute;
@@ -636,11 +684,18 @@
   </h1>
   <p>Yes? Claim your prize.</p>
   <div class="stats">
-    <div class="stat"><b id="statTotal">&mdash;</b><span>Photos today</span></div>
-    <div class="stat"><b id="statClaimed">&mdash;</b><span>Already claimed</span></div>
-    <div class="stat"><b>24h</b><span>Till next drop</span></div>
+    <div class="stat"><b id="statUnclaimed">&mdash;</b><span>Unclaimed Spottos</span></div>
+    <div class="stat"><b id="statClaimed">&mdash;</b><span>Claimed Spottos</span></div>
+    <div class="stat"><b>$20</b><span>Prize per Spotto today</span></div>
   </div>
 </section>
+
+<div class="ticker-banner">
+  <div class="ticker-track">
+    <span class="ticker-item">Shazza n Gazza brought to you by SSKB &middot; Qld's No 1 Strata Managers.</span>
+    <span class="ticker-item">Shazza n Gazza brought to you by SSKB &middot; Qld's No 1 Strata Managers.</span>
+  </div>
+</div>
 
 <div class="grid-wrap">
   <div class="grid" id="grid"></div>
@@ -772,6 +827,7 @@
           <img src="${p.imageUrl}" alt="" loading="lazy">
           <div class="mask-badge type-${p.mask_type}" title="${label} is hidden in this photo">${icons[p.mask_type]}</div>
           ${p.claimed ? `<div class="stamp type-${p.mask_type}">${label} Claimed${timeLabel ? ' &middot; ' + timeLabel : ''}</div>` : `<div id="expired-${p.id}"></div>`}
+          ${p.location ? `<div class="location-strip">${p.location}</div>` : ''}
         </div>
         <div class="perf"></div>
         <div class="stub">
@@ -784,7 +840,8 @@
 
   function renderStats(){
     const claimedCount = photos.filter(p => p.claimed).length;
-    document.getElementById('statTotal').textContent = photos.length;
+    const unclaimedCount = photos.length - claimedCount;
+    document.getElementById('statUnclaimed').textContent = unclaimedCount;
     document.getElementById('statClaimed').textContent = claimedCount;
   }
 
